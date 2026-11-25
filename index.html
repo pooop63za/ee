@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartWealth AI - นวัตกรรมบริหารการเงินอัจฉริยะ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js สำหรับกราฟการเงิน -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        },
+                        emerald: {
+                            500: '#10b981',
+                            600: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
+
+    <!-- แถบนำทางด้านบน (Navbar) -->
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+                    <i data-lucide="wallet" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-indigo-600 to-violet-500 bg-clip-text text-transparent">SmartWealth AI</h1>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">นวัตกรรมจัดการเงินและวางแผนความมั่งคั่ง</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- ปุ่มเพิ่มรายการด่วน -->
+                <button onclick="openModal('transactionModal')" class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-sm font-medium shadow-md shadow-indigo-500/20 transition-all active:scale-95">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">บันทึกรายการ</span>
+                </button>
+                
+                <!-- ปุ่มสลับโหมดมืด/สว่าง -->
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="สลับธีม">
+                    <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- แท็บเมนูนำทาง (Navigation Tabs) -->
+    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-2 sm:space-x-6">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex items-center gap-2 py-3.5 px-3 border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 font-medium text-sm whitespace-nowrap transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> ภาพรวม & กราฟ
+            </button>
+            <button onclick="switchTab('savings')" id="tab-savings" class="tab-btn flex items-center gap-2 py-3.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium text-sm whitespace-nowrap transition-colors">
+                <i data-lucide="piggy-bank" class="w-4 h-4"></i> กระปุกออมสินเป้าหมาย
+            </button>
+            <button onclick="switchTab('invest')" id="tab-invest" class="tab-btn flex items-center gap-2 py-3.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium text-sm whitespace-nowrap transition-colors">
+                <i data-lucide="candlestick-chart" class="w-4 h-4"></i> แนะนำการลงทุน AI
+            </button>
+            <button onclick="switchTab('tools')" id="tab-tools" class="tab-btn flex items-center gap-2 py-3.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium text-sm whitespace-nowrap transition-colors">
+                <i data-lucide="calculator" class="w-4 h-4"></i> เครื่องมือวางแผน & AI
+            </button>
+        </div>
+    </nav>
+
+    <!-- กล่องแจ้งเตือนแบบ Custom (Toast Notification) -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- เนื้อหาหลัก (Main Content) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ==================== TAB 1: DASHBOARD & CHARTS ==================== -->
+        <section id="view-dashboard" class="space-y-6">
+            
+            <!-- การ์ดสรุปยอดเงิน 4 ใบ -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- ยอดเงินคงเหลือสุทธิ -->
+                <div class="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-5 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between text-indigo-100 text-sm mb-1">
+                            <span>ยอดเงินคงเหลือสุทธิ</span>
+                            <i data-lucide="landmark" class="w-4 h-4"></i>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-bold tracking-tight" id="stat-balance">฿0.00</div>
+                        <div class="mt-3 text-xs text-indigo-200 flex items-center gap-1">
+                            <span class="bg-white/20 px-2 py-0.5 rounded-full">พร้อมใช้งาน</span>
+                        </div>
+                    </div>
+                    <div class="absolute -right-4 -bottom-4 opacity-10">
+                        <i data-lucide="coins" class="w-28 h-28"></i>
+                    </div>
+                </div>
+
+                <!-- รายรับรวม -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-sm mb-1">
+                        <span>รายรับเดือนนี้</span>
+                        <div class="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                            <i data-lucide="trending-up" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-income">฿0.00</div>
+                    <p class="text-xs text-slate-400 mt-2">อัปเดตล่าสุดวันนี้</p>
+                </div>
+
+                <!-- รายจ่ายรวม -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-sm mb-1">
+                        <span>รายจ่ายเดือนนี้</span>
+                        <div class="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg">
+                            <i data-lucide="trending-down" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-rose-600 dark:text-rose-400" id="stat-expense">฿0.00</div>
+                    <p class="text-xs text-slate-400 mt-2" id="expense-ratio-text">คิดเป็น 0% ของรายรับ</p>
+                </div>
+
+                <!-- เงินออมสะสมในกระปุก -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-sm mb-1">
+                        <span>เงินออมในเป้าหมาย</span>
+                        <div class="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-amber-600 dark:text-amber-400" id="stat-saved">฿0.00</div>
+                    <p class="text-xs text-slate-400 mt-2">จากกระปุกออมสินทั้งหมด</p>
+                </div>
+            </div>
+
+            <!-- ส่วนแสดงกราฟวิเคราะห์การเงิน (Charts Grid) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- กราฟแท่งเปรียบเทียบรายรับ-รายจ่าย 6 เดือน -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="font-semibold text-base">แนวโน้มกระแสเงินสด (Cash Flow)</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">เปรียบเทียบรายรับและรายจ่ายย้อนหลัง</p>
+                        </div>
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">6 เดือนล่าสุด</span>
+                    </div>
+                    <div class="relative flex-1 min-h-[260px] w-full">
+                        <canvas id="cashflowChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- กราฟโดนัทสัดส่วนค่าใช้จ่าย -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+                    <div class="mb-4">
+                        <h2 class="font-semibold text-base">สัดส่วนรายจ่ายตามหมวดหมู่</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">วิเคราะห์พฤติกรรมการใช้เงิน</p>
+                    </div>
+                    <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ประวัติรายการล่าสุด & คำแนะนำ AI ด่วน -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- รายการธุรกรรมล่าสุด -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h2 class="font-semibold text-base flex items-center gap-2">
+                            <i data-lucide="history" class="w-4 h-4 text-indigo-500"></i> ประวัติรายการล่าสุด
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <select id="filterType" onchange="renderTransactions()" class="text-xs bg-slate-100 dark:bg-slate-700 border-none rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500">
+                                <option value="all">ทั้งหมด</option>
+                                <option value="income">เฉพาะรายรับ</option>
+                                <option value="expense">เฉพาะรายจ่าย</option>
+                            </select>
+                            <button onclick="exportCSV()" class="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 px-2.5 py-1.5 rounded-lg transition-colors" title="ส่งออกข้อมูล CSV">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+                                    <th class="py-2.5 px-3">รายการ</th>
+                                    <th class="py-2.5 px-3">หมวดหมู่</th>
+                                    <th class="py-2.5 px-3">วันที่</th>
+                                    <th class="py-2.5 px-3 text-right">จำนวนเงิน</th>
+                                    <th class="py-2.5 px-2 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionList" class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
+                                <!-- แสดงข้อมูลผ่าน JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ผู้ช่วยวิเคราะห์การเงิน AI Insight -->
+                <div class="bg-gradient-to-b from-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-md flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="p-2 bg-indigo-500/20 border border-indigo-400/30 rounded-xl text-indigo-300">
+                                <i data-lucide="bot" class="w-5 h-5"></i>
+                            </span>
+                            <div>
+                                <h3 class="font-semibold text-sm">SmartWealth AI Coach</h3>
+                                <span class="text-[11px] text-emerald-400 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> วิเคราะห์เรียลไทม์
+                                </span>
+                            </div>
+                        </div>
+
+                        <div id="aiInsightBox" class="space-y-3 text-xs text-slate-200 leading-relaxed bg-white/5 p-3.5 rounded-xl border border-white/10">
+                            <!-- ข้อความวิเคราะห์จาก JS -->
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-white/10">
+                        <div class="flex justify-between items-center text-xs mb-1.5">
+                            <span class="text-slate-300">คะแนนสุขภาพการเงิน</span>
+                            <span class="font-bold text-emerald-400" id="healthScoreText">82 / 100</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                            <div id="healthScoreBar" class="bg-gradient-to-r from-indigo-400 to-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 82%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: SAVINGS GOALS ==================== -->
+        <section id="view-savings" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div>
+                    <h2 class="text-lg font-bold">กระปุกออมสินเป้าหมายอัจฉริยะ (Smart Goals)</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">แบ่งเงินออมตามเป้าหมาย สร้างวินัยทางการเงินพร้อมระบบคำนวณระยะเวลา</p>
+                </div>
+                <button onclick="openModal('goalModal')" class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-md shadow-emerald-500/20 transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i> สร้างเป้าหมายใหม่
+                </button>
+            </div>
+
+            <!-- Grid แสดงกระปุกออมสิน -->
+            <div id="goalsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- แสดงการ์ดเป้าหมายผ่าน JS -->
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: AI INVESTMENT ADVISOR ==================== -->
+        <section id="view-invest" class="hidden space-y-6">
+            <!-- ส่วนหัว & เลือกระดับความเสี่ยง -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">Robo-Advisor</span>
+                            <h2 class="text-lg font-bold">ที่ปรึกษาการจัดพอร์ตลงทุนอัจฉริยะ</h2>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">ระบบวิเคราะห์เงินออมคงเหลือและแนะนำสัดส่วนสินทรัพย์ (Asset Allocation) ตามระดับความเสี่ยงที่คุณยอมรับได้</p>
+                    </div>
+                    
+                    <div class="bg-slate-50 dark:bg-slate-700/50 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 flex items-center gap-3">
+                        <div class="text-xs text-slate-500 dark:text-slate-400">งบลงทุนแนะนำต่อเดือน (DCA):</div>
+                        <div class="text-base font-bold text-emerald-600 dark:text-emerald-400" id="invest-suggested-dca">฿0</div>
+                    </div>
+                </div>
+
+                <!-- ตัวเลือกระดับความเสี่ยง 3 ระดับ -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button onclick="selectRiskProfile('conservative')" id="risk-conservative" class="risk-btn text-left p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-400 transition-all">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400">🛡️ ความเสี่ยงต่ำ (Conservative)</span>
+                            <span class="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 px-2 py-0.5 rounded-md">ผลตอบแทน ~3-5%/ปี</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">เน้นรักษาเงินต้น ความผันผวนต่ำ เหมาะสำหรับมือใหม่หรือเป้าหมายระยะสั้น 1-3 ปี</p>
+                    </button>
+
+                    <button onclick="selectRiskProfile('moderate')" id="risk-moderate" class="risk-btn text-left p-4 rounded-xl border-2 border-indigo-600 bg-indigo-50/40 dark:bg-indigo-900/20 transition-all">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-sm text-indigo-600 dark:text-indigo-400">⚖️ ความเสี่ยงปานกลาง (Balanced)</span>
+                            <span class="text-xs bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 px-2 py-0.5 rounded-md">ผลตอบแทน ~6-8%/ปี</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">สมดุลระหว่างความมั่นคงและการเติบโต กระจายความเสี่ยงทั่วโลก ระยะกลาง 3-7 ปี</p>
+                    </button>
+
+                    <button onclick="selectRiskProfile('aggressive')" id="risk-aggressive" class="risk-btn text-left p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-400 transition-all">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-sm text-rose-600 dark:text-rose-400">🚀 ความเสี่ยงสูง (Growth)</span>
+                            <span class="text-xs bg-rose-50 dark:bg-rose-900/30 text-rose-600 px-2 py-0.5 rounded-md">ผลตอบแทน ~9-12%+/ปี</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">เน้นสร้างผลตอบแทนสูงสุดในระยะยาว 7 ปีขึ้นไป รับความผันผวนระยะสั้นได้</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- แสดงพอร์ตแนะนำ + กราฟ + รายละเอียดสินทรัพย์ -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- กราฟสัดส่วนพอร์ตการลงทุน -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-base mb-1" id="portfolio-title">พอร์ตสมดุล (Balanced Growth)</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">สัดส่วนการกระจายสินทรัพย์ที่แนะนำ</p>
+                    </div>
+                    <div class="relative h-56 flex items-center justify-center">
+                        <canvas id="portfolioChart"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <span class="text-slate-500">โอกาสเติบโตเฉลี่ยต่อปี:</span>
+                        <span class="font-bold text-indigo-600 dark:text-indigo-400 text-sm" id="portfolio-return">7.0% / ปี</span>
+                    </div>
+                </div>
+
+                <!-- รายการสินทรัพย์และคำแนะนำเชิงลึก -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-base">รายละเอียดสินทรัพย์และยอดเงิน DCA แนะนำ</h3>
+                            <button onclick="applyPortfolioToCalculator()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors">
+                                <i data-lucide="calculator" class="w-3.5 h-3.5"></i> จำลองผลตอบแทนพอร์ตนี้
+                            </button>
+                        </div>
+                        <div id="assetAllocationList" class="space-y-3">
+                            <!-- แสดงรายการสินทรัพย์ผ่าน JS -->
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-3.5 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+                        <i data-lucide="lightbulb" class="w-4 h-4 shrink-0 mt-0.5 text-amber-600"></i>
+                        <div id="invest-ai-tip">
+                            <!-- คำแนะนำ AI เฉพาะบุคคล -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 4: FINANCIAL TOOLS & AI ==================== -->
+        <section id="view-tools" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- เครื่องมือที่ 1: คำนวณดอกเบี้ยทบต้น & ความมั่งคั่ง -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-base">จำลองพลังดอกเบี้ยทบต้น (Wealth Simulator)</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">ดูการเติบโตของเงินออมและการลงทุนในอนาคต</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">เงินต้นเริ่มต้น (บาท)</label>
+                            <input type="number" id="calc-initial" value="10000" oninput="calculateCompound()" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">ออมเพิ่มต่อเดือน (บาท)</label>
+                            <input type="number" id="calc-monthly" value="3000" oninput="calculateCompound()" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">ผลตอบแทนคาดหวัง (% ต่อปี)</label>
+                            <input type="number" id="calc-rate" value="7" step="0.5" oninput="calculateCompound()" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">ระยะเวลา (ปี)</label>
+                            <input type="number" id="calc-years" value="10" min="1" max="50" oninput="calculateCompound()" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800/50 grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">เงินต้นรวมทั้งหมด</span>
+                            <div class="text-base font-bold text-slate-700 dark:text-slate-200" id="res-principal">฿370,000</div>
+                        </div>
+                        <div>
+                            <span class="text-xs text-indigo-600 dark:text-indigo-400">มูลค่ารวมในอนาคต</span>
+                            <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400" id="res-total">฿539,264</div>
+                        </div>
+                    </div>
+
+                    <div class="h-52 w-full">
+                        <canvas id="compoundChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- เครื่องมือที่ 2: กฎแบ่งเงิน 50 / 30 / 20 อัจฉริยะ -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                            <i data-lucide="pie-chart" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-base">สูตรจัดสรรงบประมาณ 50 / 30 / 20</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">คำนวณสัดส่วนการใช้เงินที่เหมาะสมจากรายได้ของคุณ</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">กรอกรายได้ต่อเดือนของคุณ (บาท)</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="budget-income" value="30000" oninput="calculateBudgetRule()" class="flex-1 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-base font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <button onclick="useCurrentIncomeForRule()" class="px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-xl text-xs font-medium transition-colors">
+                                ใช้ยอดรายรับจริง
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- 50% Needs -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-semibold text-sm flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-indigo-500"></span> 50% ค่าใช้จ่ายจำเป็น (Needs)
+                                </span>
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400" id="rule-needs">฿15,000</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">ค่าเช่าบ้าน, ค่าน้ำไฟ, ค่าอาหาร, ค่าเดินทาง, หนี้สินจำเป็น</p>
+                        </div>
+
+                        <!-- 30% Wants -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-semibold text-sm flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span> 30% ความสุขส่วนตัว (Wants)
+                                </span>
+                                <span class="font-bold text-amber-600 dark:text-amber-400" id="rule-wants">฿9,000</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">ช้อปปิ้ง, ท่องเที่ยว, ดูหนัง, ทานอาหารนอกบ้าน</p>
+                        </div>
+
+                        <!-- 20% Savings -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-semibold text-sm flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span> 20% เงินออมและลงทุน (Savings)
+                                </span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400" id="rule-savings">฿6,000</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">เงินสำรองฉุกเฉิน, กองทุนรวม, หุ้น, กระปุกออมสินเป้าหมาย</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== MODAL 1: เพิ่มรายการรายรับ-รายจ่าย ==================== -->
+    <div id="transactionModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">บันทึกรายการการเงิน</h3>
+                <button onclick="closeModal('transactionModal')" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="transactionForm" onsubmit="handleAddTransaction(event)" class="space-y-4">
+                <!-- เลือกประเภท -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                    <label class="cursor-pointer text-center">
+                        <input type="radio" name="txType" value="expense" checked class="peer hidden" onchange="updateCategoryOptions()">
+                        <div class="py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 peer-checked:bg-rose-500 peer-checked:text-white transition-all">
+                            รายจ่าย (-)
+                        </div>
+                    </label>
+                    <label class="cursor-pointer text-center">
+                        <input type="radio" name="txType" value="income" class="peer hidden" onchange="updateCategoryOptions()">
+                        <div class="py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 peer-checked:bg-emerald-500 peer-checked:text-white transition-all">
+                            รายรับ (+)
+                        </div>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">ชื่อรายการ</label>
+                    <input type="text" id="txTitle" required placeholder="เช่น ค่าอาหารกลางวัน, เงินเดือน..." class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">จำนวนเงิน (บาท)</label>
+                        <input type="number" id="txAmount" required min="1" step="any" placeholder="0.00" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">หมวดหมู่</label>
+                        <select id="txCategory" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <!-- เติมตัวเลือกจาก JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">วันที่</label>
+                    <input type="date" id="txDate" required class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeModal('transactionModal')" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700">ยกเลิก</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium shadow-md">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: สร้างกระปุกออมสินเป้าหมาย ==================== -->
+    <div id="goalModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">สร้างเป้าหมายการออมใหม่</h3>
+                <button onclick="closeModal('goalModal')" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleAddGoal(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">ชื่อเป้าหมาย</label>
+                    <input type="text" id="goalTitle" required placeholder="เช่น เงินสำรองฉุกเฉิน, ทริปญี่ปุ่น, ซื้อกองทุน" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">ยอดเงินเป้าหมาย (บาท)</label>
+                        <input type="number" id="goalTarget" required min="100" placeholder="50000" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">เงินออมเริ่มต้น (บาท)</label>
+                        <input type="number" id="goalCurrent" value="0" min="0" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">ไอคอนเป้าหมาย</label>
+                    <select id="goalIcon" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm outline-none">
+                        <option value="shield-check">🛡️ เงินสำรองฉุกเฉิน</option>
+                        <option value="plane">✈️ ท่องเที่ยว / พักผ่อน</option>
+                        <option value="home">🏠 บ้าน / ที่อยู่อาศัย</option>
+                        <option value="car">🚗 รถยนต์ / ยานพาหนะ</option>
+                        <option value="trending-up">📈 พอร์ตลงทุน / เกษียณ</option>
+                        <option value="gift">🎁 ของขวัญ / รางวัลชีวิต</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeModal('goalModal')" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-medium">ยกเลิก</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-md">สร้างกระปุกออมสิน</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3: หยอดเงินเข้ากระปุก ==================== -->
+    <div id="depositModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <h3 class="text-lg font-bold mb-1">หยอดกระปุกออมสิน</h3>
+            <p class="text-xs text-slate-500 mb-4" id="depositGoalName">เป้าหมาย: -</p>
+            
+            <form onsubmit="handleDepositGoal(event)" class="space-y-4">
+                <input type="hidden" id="depositGoalId">
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">จำนวนเงินที่ต้องการออมเพิ่ม (บาท)</label>
+                    <input type="number" id="depositAmount" required min="1" placeholder="500" class="w-full rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-lg font-bold text-emerald-600 outline-none">
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="setQuickDeposit(100)" class="flex-1 py-1.5 text-xs bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-emerald-50">+฿100</button>
+                    <button type="button" onclick="setQuickDeposit(500)" class="flex-1 py-1.5 text-xs bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-emerald-50">+฿500</button>
+                    <button type="button" onclick="setQuickDeposit(1000)" class="flex-1 py-1.5 text-xs bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-emerald-50">+฿1,000</button>
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeModal('depositModal')" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm">ยกเลิก</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">ยืนยันการออม</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // --- 1. ข้อมูลเริ่มต้น (State Management & LocalStorage) ---
+        const CATEGORIES = {
+            expense: ['อาหารและเครื่องดื่ม', 'เดินทางและน้ำมัน', 'ที่อยู่อาศัยและบิล', 'ช้อปปิ้งและไลฟ์สไตล์', 'สุขภาพและประกัน', 'อื่นๆ'],
+            income: ['เงินเดือน', 'รายได้เสริม / ฟรีแลนซ์', 'เงินปันผล / ลงทุน', 'โบนัส / อื่นๆ']
+        };
+
+        const DEFAULT_TRANSACTIONS = [
+            { id: 1, title: 'เงินเดือนประจำเดือน', amount: 35000, type: 'income', category: 'เงินเดือน', date: '2026-11-01' },
+            { id: 2, title: 'ค่าคอนโดและค่าน้ำไฟ', amount: 8500, type: 'expense', category: 'ที่อยู่อาศัยและบิล', date: '2026-11-03' },
+            { id: 3, title: 'อาหารและกาแฟ', amount: 3200, type: 'expense', category: 'อาหารและเครื่องดื่ม', date: '2026-11-10' },
+            { id: 4, title: 'เงินปันผลกองทุนรวม', amount: 2400, type: 'income', category: 'เงินปันผล / ลงทุน', date: '2026-11-15' },
+            { id: 5, title: 'ค่าเดินทาง BTS / น้ำมัน', amount: 1850, type: 'expense', category: 'เดินทางและน้ำมัน', date: '2026-11-18' },
+            { id: 6, title: 'ซื้อของใช้ส่วนตัว', amount: 2100, type: 'expense', category: 'ช้อปปิ้งและไลฟ์สไตล์', date: '2026-11-22' }
+        ];
+
+        const DEFAULT_GOALS = [
+            { id: 101, title: 'เงินสำรองฉุกเฉิน 6 เดือน', target: 100000, current: 65000, icon: 'shield-check' },
+            { id: 102, title: 'ทริปเที่ยวญี่ปุ่นปลายปี', target: 45000, current: 28500, icon: 'plane' },
+            { id: 103, title: 'พอร์ตลงทุนระยะยาว (DCA)', target: 200000, current: 82000, icon: 'trending-up' }
+        ];
+
+        let transactions = JSON.parse(localStorage.getItem('sw_transactions')) || DEFAULT_TRANSACTIONS;
+        let goals = JSON.parse(localStorage.getItem('sw_goals')) || DEFAULT_GOALS;
+
+        // ตัวแปรเก็บ Instance ของกราฟ
+        let cashflowChartInstance = null;
+        let categoryChartInstance = null;
+        let compoundChartInstance = null;
+        let portfolioChartInstance = null;
+        let currentRiskProfile = 'moderate';
+
+        const RISK_PORTFOLIOS = {
+            conservative: {
+                title: 'พอร์ตเน้นความมั่นคง (Conservative)',
+                expectedReturn: 4.0,
+                assets: [
+                    { name: 'กองทุนรวมตลาดเงิน / พันธบัตรรัฐบาล', percent: 50, color: '#10b981', desc: 'สภาพคล่องสูง ความเสี่ยงต่ำมาก เหมาะพักเงินระยะสั้น' },
+                    { name: 'หุ้นกู้เอกชนคุณภาพดี (Investment Grade)', percent: 30, color: '#06b6d4', desc: 'รับดอกเบี้ยสม่ำเสมอสูงกว่าเงินฝากธนาคาร' },
+                    { name: 'กองทุนดัชนีหุ้นโลก / หุ้นปันผล', percent: 15, color: '#6366f1', desc: 'เพิ่มโอกาสชนะเงินเฟ้อในระยะยาว' },
+                    { name: 'ทองคำ (Gold ETF)', percent: 5, color: '#f59e0b', desc: 'สินทรัพย์ปลอดภัยช่วยป้องกันความเสี่ยงยามวิกฤต' }
+                ]
+            },
+            moderate: {
+                title: 'พอร์ตสมดุลเติบโต (Balanced Growth)',
+                expectedReturn: 7.0,
+                assets: [
+                    { name: 'กองทุนรวมดัชนี S&P 500 / หุ้นโลก', percent: 45, color: '#6366f1', desc: 'เติบโตไปพร้อมกับบริษัทชั้นนำระดับโลก' },
+                    { name: 'ตราสารหนี้ระยะกลาง / พันธบัตร', percent: 35, color: '#10b981', desc: 'ลดความผันผวนของพอร์ตและสร้างกระแสเงินสด' },
+                    { name: 'กองทุนอสังหาริมทรัพย์ (REITs)', percent: 10, color: '#ec4899', desc: 'รับเงินปันผลสม่ำเสมอจากค่าเช่าอสังหาฯ' },
+                    { name: 'ทองคำ / สินทรัพย์ทางเลือก', percent: 10, color: '#f59e0b', desc: 'กระจายความเสี่ยงและป้องกันเงินเฟ้อ' }
+                ]
+            },
+            aggressive: {
+                title: 'พอร์ตเติบโตเชิงรุก (Aggressive Growth)',
+                expectedReturn: 10.5,
+                assets: [
+                    { name: 'หุ้นเติบโตสหรัฐฯ / กองทุนเทคโนโลยี (NASDAQ)', percent: 55, color: '#6366f1', desc: 'เน้นหุ้นนวัตกรรมและ AI ที่มีอัตราเติบโตสูง' },
+                    { name: 'หุ้นตลาดเกิดใหม่ / เวียดนาม / อินเดีย', percent: 25, color: '#f43f5e', desc: 'โอกาสเติบโตสูงจากเศรษฐกิจกำลังพัฒนา' },
+                    { name: 'ตราสารหนี้ระยะสั้น (สำรองรอจังหวะซื้อ)', percent: 10, color: '#10b981', desc: 'สำรองสภาพคล่องเพื่อช้อนซื้อเมื่อตลาดปรับฐาน' },
+                    { name: 'ทองคำ / สินทรัพย์ดิจิทัล (ไม่เกิน 5-10%)', percent: 10, color: '#f59e0b', desc: 'เพิ่มโอกาสสร้างผลตอบแทนส่วนเพิ่ม (Alpha)' }
+                ]
+            }
+        };
+
+        // --- 2. ฟังก์ชันเริ่มต้นระบบ (Initialization) ---
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            document.getElementById('txDate').valueAsDate = new Date();
+            updateCategoryOptions();
+            refreshAllUI();
+            calculateCompound();
+            calculateBudgetRule();
+            renderInvestmentAdvisor();
+        });
+
+        function saveData() {
+            localStorage.setItem('sw_transactions', JSON.stringify(transactions));
+            localStorage.setItem('sw_goals', JSON.stringify(goals));
+        }
+
+        function refreshAllUI() {
+            updateSummaryCards();
+            renderTransactions();
+            renderGoals();
+            updateCharts();
+            generateAIInsights();
+            renderInvestmentAdvisor();
+            lucide.createIcons();
+        }
+
+        // --- 3. การจัดการหน้าต่าง Tabs และ Modals ---
+        function switchTab(tabName) {
+            // ซ่อนทุก view
+            ['dashboard', 'savings', 'invest', 'tools'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${t}`);
+                btn.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+                btn.classList.add('border-transparent', 'text-slate-500');
+            });
+
+            // แสดง view ที่เลือก
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500');
+            activeBtn.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+
+            if (tabName === 'tools') {
+                calculateCompound();
+            } else if (tabName === 'invest') {
+                renderInvestmentAdvisor();
+            }
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            updateCharts();
+            calculateCompound();
+            renderInvestmentAdvisor();
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-indigo-600';
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- 4. ฟังก์ชันจัดการรายรับ-รายจ่าย (Transactions) ---
+        function formatCurrency(num) {
+            return '฿' + Number(num).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        function updateCategoryOptions() {
+            const type = document.querySelector('input[name="txType"]:checked').value;
+            const select = document.getElementById('txCategory');
+            select.innerHTML = CATEGORIES[type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+
+        function handleAddTransaction(e) {
+            e.preventDefault();
+            const type = document.querySelector('input[name="txType"]:checked').value;
+            const title = document.getElementById('txTitle').value.trim();
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            const category = document.getElementById('txCategory').value;
+            const date = document.getElementById('txDate').value;
+
+            if (!title || isNaN(amount) || amount <= 0) return;
+
+            const newTx = {
+                id: Date.now(),
+                title,
+                amount,
+                type,
+                category,
+                date
+            };
+
+            transactions.unshift(newTx);
+            saveData();
+            refreshAllUI();
+            closeModal('transactionModal');
+            document.getElementById('transactionForm').reset();
+            document.getElementById('txDate').valueAsDate = new Date();
+            updateCategoryOptions();
+            showToast(`บันทึก${type === 'income' ? 'รายรับ' : 'รายจ่าย'}สำเร็จ!`);
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveData();
+            refreshAllUI();
+            showToast('ลบรายการเรียบร้อยแล้ว', 'info');
+        }
+
+        function updateSummaryCards() {
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const balance = totalIncome - totalExpense;
+            const totalSaved = goals.reduce((sum, g) => sum + g.current, 0);
+
+            document.getElementById('stat-balance').textContent = formatCurrency(balance);
+            document.getElementById('stat-income').textContent = formatCurrency(totalIncome);
+            document.getElementById('stat-expense').textContent = formatCurrency(totalExpense);
+            document.getElementById('stat-saved').textContent = formatCurrency(totalSaved);
+
+            const ratio = totalIncome > 0 ? Math.round((totalExpense / totalIncome) * 100) : 0;
+            document.getElementById('expense-ratio-text').textContent = `คิดเป็น ${ratio}% ของรายรับ`;
+        }
+
+        function renderTransactions() {
+            const filter = document.getElementById('filterType').value;
+            const tbody = document.getElementById('transactionList');
+            
+            const filtered = transactions.filter(t => filter === 'all' || t.type === filter);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm">ยังไม่มีข้อมูลรายการในหมวดหมู่นี้</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.slice(0, 10).map(t => {
+                const isInc = t.type === 'income';
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                        <td class="py-3 px-3 font-medium">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-2 h-2 rounded-full ${isInc ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                                <span>${t.title}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                ${t.category}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-xs text-slate-500 dark:text-slate-400">${t.date}</td>
+                        <td class="py-3 px-3 text-right font-semibold ${isInc ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                            ${isInc ? '+' : '-'}${formatCurrency(t.amount)}
+                        </td>
+                        <td class="py-3 px-2 text-center">
+                            <button onclick="deleteTransaction(${t.id})" class="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors" title="ลบรายการ">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- 5. ระบบกราฟการเงิน (Charts with Chart.js) ---
+        function updateCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#475569';
+            const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+
+            // 5.1 กราฟแท่ง Cashflow 6 เดือน
+            const currentIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const currentExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+            const ctxCash = document.getElementById('cashflowChart').getContext('2d');
+            if (cashflowChartInstance) cashflowChartInstance.destroy();
+
+            cashflowChartInstance = new Chart(ctxCash, {
+                type: 'bar',
+                data: {
+                    labels: ['มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย. (ปัจจุบัน)'],
+                    datasets: [
+                        {
+                            label: 'รายรับ',
+                            data: [32000, 34500, 33000, 38000, 35000, currentIncome],
+                            backgroundColor: '#10b981',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'รายจ่าย',
+                            data: [21000, 23500, 19800, 24000, 20500, currentExpense],
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: textColor, font: { family: 'Prompt' } } }
+                    },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { display: false } },
+                        y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                    }
+                }
+            });
+
+            // 5.2 กราฟโดนัทสัดส่วนรายจ่าย
+            const expenseMap = {};
+            transactions.filter(t => t.type === 'expense').forEach(t => {
+                expenseMap[t.category] = (expenseMap[t.category] || 0) + t.amount;
+            });
+
+            const labels = Object.keys(expenseMap);
+            const dataValues = Object.values(expenseMap);
+
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+
+            categoryChartInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.length ? labels : ['ไม่มีรายจ่าย'],
+                    datasets: [{
+                        data: dataValues.length ? dataValues : [1],
+                        backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textColor, boxWidth: 12, padding: 12, font: { family: 'Prompt', size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 6. ระบบ AI วิเคราะห์สุขภาพการเงิน ---
+        function generateAIInsights() {
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
+
+            let score = 50;
+            if (savingsRate >= 30) score = 92;
+            else if (savingsRate >= 20) score = 84;
+            else if (savingsRate >= 10) score = 70;
+            else if (savingsRate > 0) score = 58;
+            else score = 35;
+
+            document.getElementById('healthScoreText').textContent = `${score} / 100`;
+            document.getElementById('healthScoreBar').style.width = `${score}%`;
+
+            // หาหมวดหมู่ที่ใช้จ่ายสูงสุด
+            const expenseMap = {};
+            transactions.filter(t => t.type === 'expense').forEach(t => {
+                expenseMap[t.category] = (expenseMap[t.category] || 0) + t.amount;
+            });
+            let topCat = '-';
+            let maxAmt = 0;
+            for (const [cat, amt] of Object.entries(expenseMap)) {
+                if (amt > maxAmt) { maxAmt = amt; topCat = cat; }
+            }
+
+            const insightBox = document.getElementById('aiInsightBox');
+            insightBox.innerHTML = `
+                <p>💡 <strong>อัตราการออมสุทธิ:</strong> คุณมีกระแสเงินสดเหลือเก็บ <span class="text-emerald-400 font-semibold">${savingsRate.toFixed(1)}%</span> ของรายรับ (เกณฑ์มาตรฐานแนะนำ ≥ 20%)</p>
+                <p>📊 <strong>จุดที่ควรจับตามอง:</strong> หมวดหมู่ที่ใช้จ่ายสูงสุดคือ <span class="text-amber-300 font-semibold">"${topCat}"</span> (${formatCurrency(maxAmt)})</p>
+                <p>🚀 <strong>คำแนะนำอัจฉริยะ:</strong> ${savingsRate >= 20 ? 'ยอดเยี่ยม! ลองแบ่งเงินส่วนเกินไปเพิ่มในกระปุกเป้าหมายหรือลงทุนแบบ DCA เพื่อสร้างผลตอบแทนทบต้น' : 'แนะนำให้ลดรายจ่ายหมวดไลฟ์สไตล์ลง 10-15% เพื่อเพิ่มสภาพคล่องฉุกเฉิน'}</p>
+            `;
+        }
+
+        // --- 7. ระบบกระปุกออมสินเป้าหมาย (Savings Goals) ---
+        function renderGoals() {
+            const container = document.getElementById('goalsContainer');
+            if (goals.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">ยังไม่มีเป้าหมายการออม กดปุ่ม "สร้างเป้าหมายใหม่" เพื่อเริ่มต้น</div>`;
+                return;
+            }
+
+            container.innerHTML = goals.map(g => {
+                const percent = Math.min(100, Math.round((g.current / g.target) * 100));
+                const remaining = Math.max(0, g.target - g.current);
+                const isDone = percent >= 100;
+
+                return `
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2.5 rounded-xl ${isDone ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'}">
+                                        <i data-lucide="${g.icon}" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-base">${g.title}</h3>
+                                        <span class="text-xs text-slate-400">เป้าหมาย ${formatCurrency(g.target)}</span>
+                                    </div>
+                                </div>
+                                <button onclick="deleteGoal(${g.id})" class="text-slate-400 hover:text-rose-500 p-1">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div class="my-4">
+                                <div class="flex justify-between text-sm mb-1.5">
+                                    <span class="font-bold text-emerald-600 dark:text-emerald-400">${formatCurrency(g.current)}</span>
+                                    <span class="font-semibold text-slate-600 dark:text-slate-300">${percent}%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2">
+                                    ${isDone ? '🎉 ยินดีด้วย! คุณบรรลุเป้าหมายนี้แล้ว' : `ขาดอีก ${formatCurrency(remaining)} จะถึงเป้าหมาย`}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button onclick="openDepositModal(${g.id})" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-emerald-600 text-slate-700 hover:text-white dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-emerald-600 font-medium text-sm transition-colors flex items-center justify-center gap-1.5">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> หยอดเงินเพิ่ม
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function handleAddGoal(e) {
+            e.preventDefault();
+            const title = document.getElementById('goalTitle').value.trim();
+            const target = parseFloat(document.getElementById('goalTarget').value);
+            const current = parseFloat(document.getElementById('goalCurrent').value) || 0;
+            const icon = document.getElementById('goalIcon').value;
+
+            goals.push({ id: Date.now(), title, target, current, icon });
+            saveData();
+            refreshAllUI();
+            closeModal('goalModal');
+            e.target.reset();
+            showToast('สร้างกระปุกออมสินใหม่สำเร็จ!');
+        }
+
+        function deleteGoal(id) {
+            goals = goals.filter(g => g.id !== id);
+            saveData();
+            refreshAllUI();
+            showToast('ลบเป้าหมายการออมแล้ว', 'info');
+        }
+
+        function openDepositModal(goalId) {
+            const goal = goals.find(g => g.id === goalId);
+            if (!goal) return;
+            document.getElementById('depositGoalId').value = goal.id;
+            document.getElementById('depositGoalName').textContent = `เป้าหมาย: ${goal.title}`;
+            document.getElementById('depositAmount').value = '';
+            openModal('depositModal');
+        }
+
+        function setQuickDeposit(amt) {
+            const input = document.getElementById('depositAmount');
+            input.value = (parseFloat(input.value) || 0) + amt;
+        }
+
+        function handleDepositGoal(e) {
+            e.preventDefault();
+            const goalId = parseInt(document.getElementById('depositGoalId').value);
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            const goal = goals.find(g => g.id === goalId);
+
+            if (goal && amount > 0) {
+                goal.current += amount;
+                saveData();
+                refreshAllUI();
+                closeModal('depositModal');
+                showToast(`หยอดกระปุก "${goal.title}" เพิ่ม ${formatCurrency(amount)}!`);
+            }
+        }
+
+        // --- 8. เครื่องมือวางแผนการเงินเพิ่มเติม ---
+        function calculateCompound() {
+            const P = parseFloat(document.getElementById('calc-initial').value) || 0;
+            const PMT = parseFloat(document.getElementById('calc-monthly').value) || 0;
+            const r = (parseFloat(document.getElementById('calc-rate').value) || 0) / 100;
+            const years = parseInt(document.getElementById('calc-years').value) || 1;
+
+            const labels = [];
+            const principalData = [];
+            const totalData = [];
+
+            let currentBalance = P;
+            let totalPrincipal = P;
+
+            for (let y = 1; y <= years; y++) {
+                for (let m = 1; m <= 12; m++) {
+                    currentBalance = (currentBalance + PMT) * (1 + r / 12);
+                    totalPrincipal += PMT;
+                }
+                labels.push(`ปีที่ ${y}`);
+                principalData.push(Math.round(totalPrincipal));
+                totalData.push(Math.round(currentBalance));
+            }
+
+            document.getElementById('res-principal').textContent = formatCurrency(totalPrincipal);
+            document.getElementById('res-total').textContent = formatCurrency(Math.round(currentBalance));
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#475569';
+
+            const ctx = document.getElementById('compoundChart').getContext('2d');
+            if (compoundChartInstance) compoundChartInstance.destroy();
+
+            compoundChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'มูลค่ารวม (รวมดอกเบี้ยทบต้น)',
+                            data: totalData,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                            fill: true,
+                            tension: 0.35
+                        },
+                        {
+                            label: 'เงินต้นสะสม',
+                            data: principalData,
+                            borderColor: '#94a3b8',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.35
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: textColor, font: { family: 'Prompt', size: 11 } } } },
+                    scales: {
+                        x: { ticks: { color: textColor, maxTicksLimit: 8 }, grid: { display: false } },
+                        y: { ticks: { color: textColor } }
+                    }
+                }
+            });
+        }
+
+        function calculateBudgetRule() {
+            const income = parseFloat(document.getElementById('budget-income').value) || 0;
+            document.getElementById('rule-needs').textContent = formatCurrency(income * 0.50);
+            document.getElementById('rule-wants').textContent = formatCurrency(income * 0.30);
+            document.getElementById('rule-savings').textContent = formatCurrency(income * 0.20);
+        }
+
+        function useCurrentIncomeForRule() {
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            document.getElementById('budget-income').value = totalIncome;
+            calculateBudgetRule();
+            showToast('ดึงข้อมูลรายรับจริงมาคำนวณแล้ว');
+        }
+
+        // --- 8.5 ระบบแนะนำการลงทุน AI (AI Investment Advisor) ---
+        function selectRiskProfile(profile) {
+            currentRiskProfile = profile;
+            ['conservative', 'moderate', 'aggressive'].forEach(p => {
+                const btn = document.getElementById(`risk-${p}`);
+                if (p === profile) {
+                    btn.classList.remove('border-slate-200', 'dark:border-slate-700');
+                    btn.classList.add('border-indigo-600', 'bg-indigo-50/40', 'dark:bg-indigo-900/20');
+                } else {
+                    btn.classList.remove('border-indigo-600', 'bg-indigo-50/40', 'dark:bg-indigo-900/20');
+                    btn.classList.add('border-slate-200', 'dark:border-slate-700');
+                }
+            });
+            renderInvestmentAdvisor();
+        }
+
+        function renderInvestmentAdvisor() {
+            const portfolio = RISK_PORTFOLIOS[currentRiskProfile];
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const netCashflow = Math.max(0, totalIncome - totalExpense);
+            
+            // แนะนำแบ่ง 50% ของเงินเหลือเก็บสุทธิ (หรืออย่างน้อย 15% ของรายรับ) มาลงทุน DCA
+            const suggestedDCA = netCashflow > 0 ? Math.round(netCashflow * 0.5) : Math.round(totalIncome * 0.1);
+
+            document.getElementById('invest-suggested-dca').textContent = formatCurrency(suggestedDCA);
+            document.getElementById('portfolio-title').textContent = portfolio.title;
+            document.getElementById('portfolio-return').textContent = `~${portfolio.expectedReturn}% / ปี`;
+
+            // อัปเดตรายการสินทรัพย์
+            const listEl = document.getElementById('assetAllocationList');
+            listEl.innerHTML = portfolio.assets.map(asset => {
+                const amountPerMonth = Math.round((suggestedDCA * asset.percent) / 100);
+                return `
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${asset.color}"></span>
+                                <span class="font-semibold text-sm">${asset.name}</span>
+                                <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600">${asset.percent}%</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 pl-5">${asset.desc}</p>
+                        </div>
+                        <div class="pl-5 sm:pl-0 sm:text-right shrink-0">
+                            <div class="text-xs text-slate-400">ลงทุนแนะนำ/เดือน</div>
+                            <div class="font-bold text-sm text-indigo-600 dark:text-indigo-400">${formatCurrency(amountPerMonth)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // คำแนะนำเชิงลึกจาก AI
+            const emergencyGoal = goals.find(g => g.icon === 'shield-check');
+            const emergencyProgress = emergencyGoal ? Math.round((emergencyGoal.current / emergencyGoal.target) * 100) : 0;
+            
+            let tipHTML = `<strong>คำแนะนำจาก SmartWealth AI:</strong> `;
+            if (emergencyProgress < 50) {
+                tipHTML += `ปัจจุบันเงินสำรองฉุกเฉินของคุณอยู่ที่ ${emergencyProgress}% แนะนำให้แบ่งเงินบางส่วนเติมกระปุกฉุกเฉินให้ครบ 3-6 เดือนควบคู่ไปกับการทยอยลงทุนแบบ DCA ทุกเดือน`;
+            } else {
+                tipHTML += `เงินสำรองฉุกเฉินของคุณแข็งแกร่งมาก (${emergencyProgress}%)! คุณสามารถนำเงินออมส่วนเกินมาลงทุนตามสัดส่วนนี้แบบ DCA อัตโนมัติทุกต้นเดือนเพื่อสร้างความมั่งคั่งระยะยาว`;
+            }
+            document.getElementById('invest-ai-tip').innerHTML = tipHTML;
+
+            // วาดกราฟโดนัทพอร์ตการลงทุน
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#475569';
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            if (portfolioChartInstance) portfolioChartInstance.destroy();
+
+            portfolioChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: portfolio.assets.map(a => a.name),
+                    datasets: [{
+                        data: portfolio.assets.map(a => a.percent),
+                        backgroundColor: portfolio.assets.map(a => a.color),
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.label}: ${ctx.raw}%`
+                            }
+                        }
+                    }
+                }
+            });
+            lucide.createIcons();
+        }
+
+        function applyPortfolioToCalculator() {
+            const portfolio = RISK_PORTFOLIOS[currentRiskProfile];
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            const netCashflow = Math.max(0, totalIncome - totalExpense);
+            const suggestedDCA = netCashflow > 0 ? Math.round(netCashflow * 0.5) : Math.round(totalIncome * 0.1);
+
+            document.getElementById('calc-monthly').value = suggestedDCA;
+            document.getElementById('calc-rate').value = portfolio.expectedReturn;
+            switchTab('tools');
+            showToast(`นำข้อมูล "${portfolio.title}" ไปจำลองดอกเบี้ยทบต้นแล้ว!`);
+        }
+
+        // --- 9. ส่งออกข้อมูลเป็นไฟล์ CSV ---
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "วันที่,รายการ,ประเภท,หมวดหมู่,จำนวนเงิน\n";
+            transactions.forEach(t => {
+                const typeLabel = t.type === 'income' ? 'รายรับ' : 'รายจ่าย';
+                csvContent += `${t.date},"${t.title}",${typeLabel},"${t.category}",${t.amount}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "smartwealth_report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('ดาวน์โหลดรายงาน CSV สำเร็จ!');
+        }
+    </script>
+</body>
+</html>
